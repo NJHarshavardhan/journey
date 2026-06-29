@@ -1,0 +1,600 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Train Booking Planner</title>
+
+<style>
+:root{
+  --primary:#2563eb;
+  --bg:#f4f7fb;
+  --card:#ffffff;
+  --border:#e5e7eb;
+  --text:#111827;
+  --muted:#64748b;
+  --shadow:0 15px 40px rgba(0,0,0,.08);
+}
+
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  font-family:Inter,Arial,sans-serif;
+}
+
+body{
+  background:var(--bg);
+  padding:20px;
+  color:var(--text);
+}
+
+.container{
+  max-width:1200px;
+  margin:auto;
+}
+
+.header{
+  background:var(--card);
+  border-radius:24px;
+  padding:20px;
+  box-shadow:var(--shadow);
+  margin-bottom:20px;
+  position:sticky;
+  top:12px;
+  z-index:100;
+}
+
+.nav{
+  display:grid;
+  grid-template-columns:60px 1fr 60px;
+  align-items:center;
+  gap:20px;
+}
+
+.nav button{
+  width:60px;
+  height:60px;
+  border:none;
+  border-radius:18px;
+  background:#f1f5f9;
+  cursor:pointer;
+  font-size:24px;
+  transition:.2s;
+}
+
+.nav button:hover{
+  background:#e2e8f0;
+}
+
+.title{
+  text-align:center;
+}
+
+.title h1{
+  font-size:32px;
+}
+
+.title p{
+  color:var(--muted);
+  margin-top:4px;
+}
+
+.filters{
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  margin-top:20px;
+}
+
+.filters select{
+  padding:12px 18px;
+  border:none;
+  border-radius:14px;
+  background:#f8fafc;
+  font-size:15px;
+}
+
+.calendar{
+  background:var(--card);
+  border-radius:24px;
+  padding:20px;
+  box-shadow:var(--shadow);
+}
+
+.weekdays,
+.days{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:12px;
+}
+
+.weekdays div{
+  text-align:center;
+  color:var(--muted);
+  font-weight:600;
+  padding:10px;
+}
+
+.empty{
+  min-height:120px;
+}
+
+.day{
+  min-height:120px;
+  background:#fafafa;
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:12px;
+  position:relative;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.day:hover{
+  transform:translateY(-4px);
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
+}
+
+.day-number{
+  font-weight:700;
+  font-size:18px;
+}
+
+.today{
+  background:var(--primary);
+  color:#fff;
+}
+
+.has-note{
+  border:2px solid var(--primary);
+}
+
+.note-preview{
+  margin-top:8px;
+  font-size:12px;
+  color:var(--muted);
+  overflow:hidden;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+}
+
+.today .note-preview{
+  color:#fff;
+}
+
+.tooltip{
+  position:absolute;
+  top:-46px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#111827;
+  color:#fff;
+  padding:8px 12px;
+  border-radius:10px;
+  font-size:12px;
+  white-space:nowrap;
+  display:none;
+  z-index:20;
+}
+
+.tooltip::after{
+  content:'';
+  position:absolute;
+  top:100%;
+  left:50%;
+  transform:translateX(-50%);
+  border:6px solid transparent;
+  border-top-color:#111827;
+}
+
+.day:hover .tooltip{
+  display:block;
+}
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.45);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  z-index:999;
+}
+
+.modal-card{
+  width:100%;
+  max-width:500px;
+  background:#fff;
+  border-radius:28px;
+  padding:24px;
+}
+
+.modal h2{
+  margin-bottom:10px;
+}
+
+.after-date{
+  background:#eef4ff;
+  color:var(--primary);
+  padding:14px;
+  border-radius:14px;
+  margin-bottom:18px;
+  font-weight:600;
+}
+
+textarea{
+  width:100%;
+  min-height:140px;
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:14px;
+  resize:vertical;
+}
+
+.actions{
+  display:flex;
+  gap:10px;
+  margin-top:16px;
+}
+
+.actions button{
+  flex:1;
+  padding:14px;
+  border:none;
+  border-radius:16px;
+  cursor:pointer;
+}
+
+.save{
+  background:var(--primary);
+  color:#fff;
+}
+
+.close{
+  background:#f1f5f9;
+}
+
+@media(max-width:768px){
+
+  body{
+    padding:10px;
+  }
+
+  .nav{
+    grid-template-columns:50px 1fr 50px;
+    gap:10px;
+  }
+
+  .nav button{
+    width:50px;
+    height:50px;
+    font-size:20px;
+  }
+
+  .title h1{
+    font-size:20px;
+  }
+
+  .filters{
+    display:grid;
+    grid-template-columns:1fr 110px;
+  }
+
+  .weekdays,
+  .days{
+    gap:6px;
+  }
+
+  .day{
+    min-height:72px;
+    padding:8px;
+  }
+
+  .empty{
+    min-height:72px;
+  }
+
+  .note-preview{
+    display:none;
+  }
+
+  .modal{
+    align-items:flex-end;
+  }
+
+  .modal-card{
+    border-radius:28px 28px 0 0;
+    max-width:none;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="header">
+
+    <div class="nav">
+      <button onclick="prevMonth()">❮</button>
+
+      <div class="title">
+        <h1 id="monthTitle"></h1>
+        <p>Train Booking Planner</p>
+      </div>
+
+      <button onclick="nextMonth()">❯</button>
+    </div>
+
+    <div class="filters">
+      <select id="monthSelect"></select>
+      <select id="yearSelect"></select>
+    </div>
+
+  </div>
+
+  <div class="calendar">
+
+    <div class="weekdays">
+      <div>Sun</div>
+      <div>Mon</div>
+      <div>Tue</div>
+      <div>Wed</div>
+      <div>Thu</div>
+      <div>Fri</div>
+      <div>Sat</div>
+    </div>
+
+    <div class="days" id="days"></div>
+
+  </div>
+
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-card">
+    <h2 id="popupDate"></h2>
+
+    <div class="after-date" id="afterDate"></div>
+
+    <textarea
+      id="noteBox"
+      placeholder="Journey note..."
+    ></textarea>
+
+    <div class="actions">
+      <button class="save" onclick="saveNote()">Save</button>
+      <button class="close" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const months = [
+'January','February','March','April','May','June',
+'July','August','September','October','November','December'
+];
+
+let current = new Date();
+let selectedKey = '';
+
+const monthTitle =
+  document.getElementById('monthTitle');
+
+const daysEl =
+  document.getElementById('days');
+
+const monthSelect =
+  document.getElementById('monthSelect');
+
+const yearSelect =
+  document.getElementById('yearSelect');
+
+months.forEach((m,i)=>{
+  monthSelect.innerHTML +=
+    `<option value="${i}">${m}</option>`;
+});
+
+for(let y=2024;y<=2038;y++){
+  yearSelect.innerHTML +=
+    `<option value="${y}">${y}</option>`;
+}
+
+monthSelect.onchange = () => {
+  current.setMonth(+monthSelect.value);
+  render();
+};
+
+yearSelect.onchange = () => {
+  current.setFullYear(+yearSelect.value);
+  render();
+};
+
+function render(){
+
+  daysEl.innerHTML='';
+
+  const year =
+    current.getFullYear();
+
+  const month =
+    current.getMonth();
+
+  monthTitle.innerText =
+    `${months[month]} ${year}`;
+
+  monthSelect.value = month;
+  yearSelect.value = year;
+
+  const first =
+    new Date(year,month,1);
+
+  const last =
+    new Date(year,month+1,0);
+
+  for(let i=0;i<first.getDay();i++){
+    const e =
+      document.createElement('div');
+    e.className='empty';
+    daysEl.appendChild(e);
+  }
+
+  for(let d=1;d<=last.getDate();d++){
+
+    const date =
+      new Date(year,month,d);
+
+    const key =
+      date.toISOString().split('T')[0];
+
+    const after =
+      new Date(date);
+
+    after.setDate(after.getDate()+60);
+
+    const note =
+      localStorage.getItem(
+        'note-'+key
+      );
+
+    const today =
+      new Date();
+
+    const isToday =
+      date.toDateString() ===
+      today.toDateString();
+
+    const cell =
+      document.createElement('div');
+
+    cell.className =
+      'day' +
+      (note ? ' has-note' : '') +
+      (isToday ? ' today' : '');
+
+    cell.innerHTML = `
+      <div class="day-number">${d}</div>
+      <div class="tooltip">
+        ${after.toDateString()}
+      </div>
+      ${
+        note
+        ? `<div class="note-preview">📝 ${note}</div>`
+        : ''
+      }
+    `;
+
+    cell.onclick =
+      () => openNote(
+        key,
+        date,
+        after
+      );
+
+    daysEl.appendChild(cell);
+  }
+}
+
+function prevMonth(){
+  current.setMonth(
+    current.getMonth()-1
+  );
+  render();
+}
+
+function nextMonth(){
+  current.setMonth(
+    current.getMonth()+1
+  );
+  render();
+}
+
+function openNote(key,date,after){
+
+  selectedKey = key;
+
+  document.getElementById(
+    'popupDate'
+  ).innerText =
+    date.toDateString();
+
+  document.getElementById(
+    'afterDate'
+  ).innerText =
+    after.toDateString();
+
+  document.getElementById(
+    'noteBox'
+  ).value =
+    localStorage.getItem(
+      'note-'+key
+    ) || '';
+
+  document.getElementById(
+    'modal'
+  ).style.display='flex';
+}
+
+function closeModal(){
+  document.getElementById(
+    'modal'
+  ).style.display='none';
+}
+
+function saveNote(){
+
+  const text =
+    document.getElementById(
+      'noteBox'
+    ).value.trim();
+
+  if(text){
+    localStorage.setItem(
+      'note-'+selectedKey,
+      text
+    );
+  }else{
+    localStorage.removeItem(
+      'note-'+selectedKey
+    );
+  }
+
+  closeModal();
+  render();
+}
+
+let startX = 0;
+
+document.addEventListener(
+  'touchstart',
+  e => startX =
+    e.touches[0].clientX
+);
+
+document.addEventListener(
+  'touchend',
+  e => {
+
+    let endX =
+      e.changedTouches[0].clientX;
+
+    if(startX - endX > 70){
+      nextMonth();
+    }
+
+    if(endX - startX > 70){
+      prevMonth();
+    }
+  }
+);
+
+render();
+</script>
+
+</body>
+</html>
+
